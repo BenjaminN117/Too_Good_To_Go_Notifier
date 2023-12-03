@@ -40,7 +40,8 @@ class magic_bag_notifier:
                 except KeyError as err:
                         print("Item not in the dict, adding now")
                         self.knownFavouritesState[item["display_name"]] = item["items_available"]
-                        self.send_request(item["display_name"], item["items_available"])
+                        if item["items_available"] > 0:
+                            self.send_request(item["display_name"], item["items_available"])
                 
 if __name__ == "__main__":
 
