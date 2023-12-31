@@ -13,17 +13,22 @@ class magic_bag_notifier:
 
     def auth(self):
         
-        self.send_request(store_name="AUTH REQUEST", bags_available="")
+        self.other_info_request(infoType="AUTH REQUEST", message="Please check your email")
         try:
             self.client = TgtgClient(email=self.emailAddress)
             self.client.get_items()
         except Exception as err:
             print("Auth Error occured")
-            self.send_request(store_name="AUTH ERROR", bags_available=err)
+            self.other_info_request(infoType="AUTH ERROR", message=str(err))
+            quit(1)
 
     def send_request(self, store_name, bags_available):
 
         r = requests.post(f'https://maker.ifttt.com/trigger/{self.iftttTrigger}/json/with/key/{self.iftttKey}', json={"Store Name": store_name, "Bags Available": bags_available})
+        
+    def other_info_request(self, infoType, message):
+
+        r = requests.post(f'https://maker.ifttt.com/trigger/{self.iftttTrigger}/json/with/key/{self.iftttKey}', json={infoType: message})
     
     def fetch_bag_status(self, scheduler):
         
@@ -35,6 +40,7 @@ class magic_bag_notifier:
                         if item["items_available"] > 0:
                             print("Notif Sent")
                             self.send_request(item["display_name"], item["items_available"])
+                            self.knownFavouritesState[item["display_name"]] = item["items_available"]
                     else:
                         print("item has been found but the number hasn't changed")
                 except KeyError as err:
