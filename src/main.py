@@ -5,7 +5,7 @@ import os
 
 class magic_bag_notifier:
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.emailAddress = os.environ["EMAIL_ADDRESS"]
         self.iftttKey = os.environ["IFTTT_KEY"]
         self.iftttTrigger = os.environ["IFTTT_TRIGGER"]
@@ -55,6 +55,8 @@ if __name__ == "__main__":
     
     inst.auth()
     
+    queryDelay = os.environ["QUERY_TIME"] if os.environ.get("QUERY_TIME") is not None else 60
+
     my_scheduler = sched.scheduler(time.time, time.sleep)
-    my_scheduler.enter(60, 1, inst.fetch_bag_status, (my_scheduler,))
+    my_scheduler.enter(queryDelay, 1, inst.fetch_bag_status, (my_scheduler,))
     my_scheduler.run()
