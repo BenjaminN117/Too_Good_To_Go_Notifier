@@ -15,8 +15,11 @@ class magic_bag_notifier:
         
         self.other_info_request(infoType="AUTH REQUEST", message="Please check your email")
         try:
-            self.client = TgtgClient(email=self.emailAddress)
-            self.client.get_items()
+            # Initial token retrieve
+            initClient = TgtgClient(email=self.emailAddress)
+            # Auth with Refresh and Access tokens
+            credentials = initClient.get_credentials()
+            self.client = TgtgClient(access_token=credentials["access_token"], refresh_token=credentials["refresh_token"], user_id=credentials["user_id"], cookie=credentials["cookie"])
         except Exception as err:
             print("Auth Error occured")
             self.other_info_request(infoType="AUTH ERROR", message=str(err))
@@ -33,7 +36,15 @@ class magic_bag_notifier:
     def fetch_bag_status(self, scheduler):
         
         scheduler.enter(60, 1, self.fetch_bag_status, (scheduler,))
-        items = self.client.get_items()
+        try:
+            items = self.client.get_items()
+        except requests.exceptions.ConnectionError as connectionError:
+            self.other_info_request("Connection Error", str(connectionError))
+            return None
+        except Exception as otherError:
+            self.other_info_request("Query Error", str(otherError))
+            return None
+        
         for item in items:
                 try:
                     if item["items_available"] != self.knownFavouritesState[item["display_name"]]:
